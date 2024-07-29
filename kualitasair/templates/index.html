@@ -1,0 +1,168 @@
+  <!DOCTYPE html>
+  <html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Quality Analysis</title>
+    <script>
+      async function analyzeData() {
+        const formData = new FormData();
+        formData.append('file', document.getElementById('file').files[0]);
+
+        const response = await fetch('/analyze', {
+          method: 'POST',
+          body: formData
+        });
+
+        const result = await response.json();
+        displayData(result.data);
+        displayAccuracy(result.accuracy);
+      }
+
+      async function filterData() {
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+
+        const response = await fetch('/analyze', {
+          method: 'POST',
+          body: new FormData(document.getElementById('analyze_form'))
+        });
+
+        const result = await response.json();
+        const filteredData = filterByDate(result.data, startDate, endDate);
+        displayData(filteredData);
+        displayAccuracy(result.accuracy);
+      }
+
+      function filterByDate(data, startDate, endDate) {
+        return data.filter(row => {
+          const tanggal = new Date(row['Tanggal']);
+          return (!startDate || tanggal >= new Date(startDate)) &&
+            (!endDate || tanggal <= new Date(endDate));
+        });
+      }
+
+      function displayData(data) {
+        const table = document.getElementById('results');
+        table.innerHTML = '';
+        data.forEach(row => {
+          const tr = document.createElement('tr');
+          for (const key in row) {
+            const td = document.createElement('td');
+            td.textContent = row[key];
+            tr.appendChild(td);
+          }
+          table.appendChild(tr);
+        });
+      }
+
+      function displayAccuracy(accuracy) {
+        const accuracyElement = document.getElementById('accuracy');
+        accuracyElement.textContent = `Accuracy: ${accuracy}`;
+      }
+    </script>
+    <style>
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      table,
+      th,
+      td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: center;
+      }
+
+      th {
+        background-color: #f2f2f2;
+      }
+
+      body {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        font-family: Arial, sans-serif;
+      }
+
+      form, #accuracy, h2 {
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      h1, h2 {
+        color: #333;
+         text-align: center;
+      }
+
+      button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      input[type="file"] {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 200px;
+      }
+
+      input[type="date"], label {
+        margin-right: 10px;
+      }
+
+      h2 {
+        margin-top: 30px;
+      }
+          
+    </style>
+  </head>
+
+  <body>
+    <h1>Analyze Water Quality</h1>
+    <form id="analyze_form" enctype="multipart/form-data">
+      <label for="file">Upload CSV file:</label>
+      <input type="file" id="file" name="file" accept=".csv" required>
+      <button type="button" onclick="analyzeData()">Analyze</button>
+    </form>
+
+   
+
+    <label for="start_date">Start Date:</label>
+    <input type="date" id="start_date" name="start_date">
+    <label for="end_date">End Date:</label>
+    <input type="date" id="end_date" name="end_date">
+    <button type="button" onclick="filterData()">Filter</button>
+
+    <h2>Results</h2>
+    <div id="accuracy"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>Kualitas</th>
+          <th>PH Air</th>
+          <th>Salinitas Air</th>
+          <th>Suhu Air</th>
+        </tr>
+      </thead>
+      <tbody id="results">
+        <!-- Data will be inserted here -->
+      </tbody>
+    </table>
+  </body>
+
+  </html>
